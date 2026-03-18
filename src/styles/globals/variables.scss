@@ -1,0 +1,18 @@
+// Цветовая схема
+$color-default-black: #000000;
+$color-default-white: #ffffff;
+$primary: #3b82f6;
+$secondary: #10b981;
+$danger: #ef4444;
+$warning: #f59e0b;
+
+// Тени
+$shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+$shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+$shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+
+// Брейкпоинты
+$sm: 640px;
+$md: 768px;
+$lg: 1024px;
+$xl: 1280px;
