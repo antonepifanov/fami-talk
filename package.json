@@ -6,7 +6,8 @@
     "dev": "concurrently \"next dev\" \"open-cli http://localhost:3000\"",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,css,scss,json,md}\""
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

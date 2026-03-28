@@ -1,18 +1,18 @@
-import NextAuth, { Session, User } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "@/lib/prisma";
-import { compare } from "bcryptjs";
-import { JWT } from "next-auth/jwt";
+import NextAuth, { Session, User } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import { prisma } from '@/lib/prisma';
+import { compare } from 'bcryptjs';
+import { JWT } from 'next-auth/jwt';
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
-      name: "credentials",
+      name: 'credentials',
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Пароль", type: "password" }
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Пароль', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -20,7 +20,7 @@ export const authOptions = {
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
+          where: { email: credentials.email },
         });
 
         if (!user || !user.passwordHash) {
@@ -38,15 +38,15 @@ export const authOptions = {
           email: user.email,
           name: user.name,
         };
-      }
-    })
+      },
+    }),
   ],
   session: {
-    strategy: "jwt" as const,
+    strategy: 'jwt' as const,
   },
   pages: {
-    signIn: "/login",
-    signUp: "/register",
+    signIn: '/login',
+    signUp: '/register',
   },
   callbacks: {
     async jwt({ token, user }: { token: JWT; user?: User }) {
@@ -60,7 +60,7 @@ export const authOptions = {
         session.user.id = token.id as string;
       }
       return session;
-    }
+    },
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
