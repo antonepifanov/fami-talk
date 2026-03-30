@@ -1,6 +1,6 @@
 // src/middleware.ts
-import { withAuth } from "next-auth/middleware";
-import { NextResponse } from "next/server";
+import { withAuth } from 'next-auth/middleware';
+import { NextResponse } from 'next/server';
 
 export default withAuth(
   function middleware(req) {
@@ -9,12 +9,12 @@ export default withAuth(
   },
   {
     pages: {
-      signIn: "/login", // ← неавторизованных отправляем на логин
+      signIn: '/login', // ← неавторизованных отправляем на логин
     },
   }
 );
 
 // Какие маршруты защищаем
 export const config = {
-  matcher: ["/", "/chats/:path*", "/profile"], // ← главная и подстраницы
+  matcher: ['/', '/chats/:path*', '/profile'], // ← главная и подстраницы
 };

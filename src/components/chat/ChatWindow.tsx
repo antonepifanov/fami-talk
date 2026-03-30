@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { Send } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useState } from 'react';
+import { Send } from 'lucide-react';
 
 interface ChatWindowProps {
   userId: string;
@@ -11,7 +11,7 @@ interface ChatWindowProps {
 }
 
 export function ChatWindow({ userId, chatId }: ChatWindowProps) {
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
 
   if (!chatId) {
     return (
@@ -27,8 +27,8 @@ export function ChatWindow({ userId, chatId }: ChatWindowProps) {
   const handleSend = () => {
     if (!message.trim()) return;
     // TODO: Отправка сообщения через API
-    console.log("Отправка:", message);
-    setMessage("");
+    console.log('Отправка:', message);
+    setMessage('');
   };
 
   return (
@@ -40,9 +40,7 @@ export function ChatWindow({ userId, chatId }: ChatWindowProps) {
 
       {/* Сообщения */}
       <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
-        <div className="text-center text-gray-500">
-          Сообщений пока нет
-        </div>
+        <div className="text-center text-gray-500">Сообщений пока нет</div>
       </div>
 
       {/* Поле ввода */}
@@ -52,7 +50,7 @@ export function ChatWindow({ userId, chatId }: ChatWindowProps) {
             placeholder="Введите сообщение..."
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             className="flex-1"
           />
           <Button onClick={handleSend} size="icon">

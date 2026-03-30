@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { PlusCircle, MessageSquare } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { PlusCircle, MessageSquare } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface Chat {
   id: string;
@@ -32,16 +32,16 @@ export function ChatSidebar({ chats, userId }: ChatSidebarProps) {
 
   const getChatName = (chat: Chat) => {
     if (chat.name) return chat.name;
-    if (chat.isGroup) return "Групповой чат";
+    if (chat.isGroup) return 'Групповой чат';
 
     // Личный чат — имя собеседника
-    const otherUser = chat.participants.find(p => p.id !== userId);
-    return otherUser?.name || "Неизвестный пользователь";
+    const otherUser = chat.participants.find((p) => p.id !== userId);
+    return otherUser?.name || 'Неизвестный пользователь';
   };
 
   const getChatAvatar = (chat: Chat) => {
     if (chat.isGroup) return null;
-    const otherUser = chat.participants.find(p => p.id !== userId);
+    const otherUser = chat.participants.find((p) => p.id !== userId);
     return otherUser?.avatarUrl;
   };
 
@@ -71,17 +71,13 @@ export function ChatSidebar({ chats, userId }: ChatSidebarProps) {
               onClick={() => router.push(`/chats/${chat.id}`)}
             >
               <Avatar>
-                <AvatarImage src={getChatAvatar(chat) || ""} />
-                <AvatarFallback>
-                  {getChatName(chat)[0]?.toUpperCase() || "?"}
-                </AvatarFallback>
+                <AvatarImage src={getChatAvatar(chat) || ''} />
+                <AvatarFallback>{getChatName(chat)[0]?.toUpperCase() || '?'}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <div className="font-medium truncate">{getChatName(chat)}</div>
                 {chat.messages[0] && (
-                  <div className="text-sm text-gray-500 truncate">
-                    {chat.messages[0].content}
-                  </div>
+                  <div className="text-sm text-gray-500 truncate">{chat.messages[0].content}</div>
                 )}
               </div>
             </div>

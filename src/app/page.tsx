@@ -1,15 +1,15 @@
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { ChatSidebar } from "@/components/chat/ChatSidebar";
-import { ChatWindow } from "@/components/chat/ChatWindow";
+import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
+import { prisma } from '@/lib/prisma';
+import { ChatSidebar } from '@/components/chat/ChatSidebar';
+import { ChatWindow } from '@/components/chat/ChatWindow';
 
 export default async function HomePage() {
   // Получаем сессию на сервере
   const session = await getServerSession();
 
   if (!session?.user?.email) {
-    redirect("/login");
+    redirect('/login');
   }
 
   // Получаем пользователя из базы
@@ -20,7 +20,7 @@ export default async function HomePage() {
         include: {
           messages: {
             take: 1,
-            orderBy: { createdAt: "desc" },
+            orderBy: { createdAt: 'desc' },
           },
         },
       },
@@ -28,7 +28,7 @@ export default async function HomePage() {
   });
 
   if (!user) {
-    redirect("/login");
+    redirect('/login');
   }
 
   // Получаем список чатов пользователя
@@ -41,7 +41,7 @@ export default async function HomePage() {
     include: {
       messages: {
         take: 1,
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
       },
       participants: {
         select: {
@@ -53,7 +53,7 @@ export default async function HomePage() {
       },
     },
     orderBy: {
-      updatedAt: "desc",
+      updatedAt: 'desc',
     },
   });
 

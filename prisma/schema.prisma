@@ -9,17 +9,17 @@ datasource db {
 
 model User {
   id            String    @id @default(cuid())
-  email         String    @unique
+  email         String?   @unique
+  phone         String?   @unique
   name          String?
   avatarUrl     String?
-  phoneNumber   String?   @unique
   status        String    @default("OFFLINE")
   lastSeen      DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  passwordHash  String?   
-  accounts      Account[]   
-  sessions      Session[]   
+  passwordHash  String?
+  accounts      Account[]
+  sessions      Session[]
   messages      Message[]
   chats         Chat[]
 }
