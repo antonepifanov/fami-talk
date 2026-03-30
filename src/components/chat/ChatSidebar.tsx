@@ -2,8 +2,9 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, MessageSquare } from 'lucide-react';
+import { PlusCircle, MessageSquare, LogOut, UserCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 
 interface Chat {
   id: string;
@@ -33,8 +34,6 @@ export function ChatSidebar({ chats, userId }: ChatSidebarProps) {
   const getChatName = (chat: Chat) => {
     if (chat.name) return chat.name;
     if (chat.isGroup) return 'Групповой чат';
-
-    // Личный чат — имя собеседника
     const otherUser = chat.participants.find((p) => p.id !== userId);
     return otherUser?.name || 'Неизвестный пользователь';
   };
@@ -45,14 +44,27 @@ export function ChatSidebar({ chats, userId }: ChatSidebarProps) {
     return otherUser?.avatarUrl;
   };
 
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    router.push('/login');
+  };
+
   return (
     <div className="w-80 bg-gray-50 border-r flex flex-col">
       {/* Заголовок */}
       <div className="p-4 border-b flex justify-between items-center">
         <h2 className="font-semibold text-lg">Чаты</h2>
-        <Button size="icon" variant="ghost">
-          <PlusCircle className="h-5 w-5" />
-        </Button>
+        <div className="flex gap-2">
+          <Button size="icon" variant="ghost" onClick={() => router.push('/profile')}>
+            <UserCircle className="h-5 w-5" />
+          </Button>
+          <Button size="icon" variant="ghost">
+            <PlusCircle className="h-5 w-5" />
+          </Button>
+          <Button size="icon" variant="ghost" onClick={handleLogout}>
+            <LogOut className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
       {/* Список чатов */}
