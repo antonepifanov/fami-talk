@@ -1,23 +1,23 @@
 'use client';
 
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Phone, KeyRound, User, Lock } from 'lucide-react';
+import { Phone, KeyRound, Lock } from 'lucide-react';
 
-export default function RegisterPage() {
+export default function ForgotPasswordPage() {
   const router = useRouter();
-  const [name, setName] = useState('');
   const [step, setStep] = useState<'phone' | 'code' | 'password'>('phone');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
-  const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
 
+  // Нормализация телефона
   const normalizePhone = (phone: string): string | null => {
     const cleaned = phone.replace(/\D/g, '');
     if (!cleaned) return null;
@@ -47,8 +47,8 @@ export default function RegisterPage() {
       );
   };
 
-  // Шаг 1: отправка кода
-  const sendCode = async () => {
+  // Шаг 1: отправка кода для сброса пароля
+  const sendResetCode = async () => {
     setLoading(true);
     setError('');
     const normalizedPhone = normalizePhone(phone);
@@ -62,7 +62,10 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/send-sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: normalizedPhone, type: 'register' }),
+        body: JSON.stringify({
+          phone: normalizedPhone,
+          type: 'reset',
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Ошибка отправки кода');
@@ -84,8 +87,8 @@ export default function RegisterPage() {
     }
   };
 
-  // Шаг 2: подтверждение кода (только проверка, без создания пользователя)
-  const verifyCode = async () => {
+  // Шаг 2: подтверждение кода
+  const verifyResetCode = async () => {
     setLoading(true);
     setError('');
     const normalizedPhone = normalizePhone(phone);
@@ -102,7 +105,7 @@ export default function RegisterPage() {
         body: JSON.stringify({
           phone: normalizedPhone,
           code,
-          type: 'register',
+          type: 'reset',
         }),
       });
       const data = await res.json();
@@ -115,13 +118,9 @@ export default function RegisterPage() {
     }
   };
 
-  // Шаг 3: завершение регистрации (создание пользователя с name/password)
-  const completeRegistration = async () => {
-    if (!name) {
-      setError('Введите имя');
-      return;
-    }
-    if (!password || password.length < 6) {
+  // Шаг 3: установка нового пароля
+  const resetPassword = async () => {
+    if (!newPassword || newPassword.length < 6) {
       setError('Пароль должен содержать не менее 6 символов');
       return;
     }
@@ -142,14 +141,13 @@ export default function RegisterPage() {
         body: JSON.stringify({
           phone: normalizedPhone,
           code,
-          type: 'register',
-          name,
-          password,
+          type: 'reset',
+          password: newPassword,
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Ошибка создания аккаунта');
-      router.push('/login?registered=true');
+      if (!res.ok) throw new Error(data.error || 'Ошибка сброса пароля');
+      router.push('/login?reset=true');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка');
     } finally {
@@ -166,7 +164,7 @@ export default function RegisterPage() {
             <div className="mx-auto mb-4 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
               <Phone className="h-8 w-8 text-white" />
             </div>
-            <CardTitle className="text-3xl">Регистрация</CardTitle>
+            <CardTitle className="text-3xl">Сброс пароля</CardTitle>
             <CardDescription>Введите номер телефона</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -180,13 +178,12 @@ export default function RegisterPage() {
               />
             </div>
             {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{error}</div>}
-            <Button onClick={sendCode} disabled={!phone || loading} className="w-full">
-              {loading ? 'Отправка...' : 'Продолжить'}
+            <Button onClick={sendResetCode} disabled={!phone || loading} className="w-full">
+              {loading ? 'Отправка...' : 'Отправить код'}
             </Button>
             <div className="text-center text-sm text-gray-600 pt-2">
-              Уже есть аккаунт?{' '}
               <a href="/login" className="text-blue-600 hover:underline font-medium">
-                Войти
+                Вернуться ко входу
               </a>
             </div>
           </CardContent>
@@ -215,11 +212,15 @@ export default function RegisterPage() {
               />
             </div>
             {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{error}</div>}
-            <Button onClick={verifyCode} disabled={code.length !== 6 || loading} className="w-full">
+            <Button
+              onClick={verifyResetCode}
+              disabled={code.length !== 6 || loading}
+              className="w-full"
+            >
               {loading ? 'Проверка...' : 'Подтвердить'}
             </Button>
             <button
-              onClick={sendCode}
+              onClick={sendResetCode}
               disabled={resendTimer > 0}
               className="w-full text-sm text-blue-600 hover:underline disabled:text-gray-400"
             >
@@ -241,42 +242,29 @@ export default function RegisterPage() {
     );
   }
 
-  // Шаг 3: имя и пароль
+  // Шаг 3: установка нового пароля
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <Card className="w-[450px] shadow-xl">
         <CardHeader className="text-center">
-          <User className="mx-auto mb-4 h-12 w-12 text-blue-600" />
-          <CardTitle>Завершение регистрации</CardTitle>
-          <CardDescription>Придумайте имя и пароль</CardDescription>
+          <Lock className="mx-auto mb-4 h-12 w-12 text-blue-600" />
+          <CardTitle>Новый пароль</CardTitle>
+          <CardDescription>Придумайте новый пароль для {phone}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Ваше имя"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="pl-10"
-            />
-          </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="password"
-              placeholder="Пароль (мин. 6 символов)"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Новый пароль (мин. 6 символов)"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
               className="pl-10"
             />
           </div>
           {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{error}</div>}
-          <Button
-            onClick={completeRegistration}
-            disabled={!name || !password || loading}
-            className="w-full"
-          >
-            {loading ? 'Создание...' : 'Завершить'}
+          <Button onClick={resetPassword} disabled={!newPassword || loading} className="w-full">
+            {loading ? 'Сохранение...' : 'Установить пароль'}
           </Button>
           <div className="text-center pt-2">
             <button

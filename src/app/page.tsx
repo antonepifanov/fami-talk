@@ -1,20 +1,20 @@
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { ChatWindow } from '@/components/chat/ChatWindow';
 
 export default async function HomePage() {
-  // Получаем сессию на сервере
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
 
-  if (!session?.user?.email) {
+  if (!session?.user?.phone) {
     redirect('/login');
   }
 
-  // Получаем пользователя из базы
+  // Получаем пользователя по телефону
   const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+    where: { phone: session.user.phone },
     include: {
       chats: {
         include: {
@@ -59,10 +59,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex h-screen">
-      {/* Сайдбар со списком чатов */}
       <ChatSidebar chats={chats} userId={user.id} />
-
-      {/* Основное окно чата (пока пустое) */}
       <ChatWindow userId={user.id} />
     </div>
   );
