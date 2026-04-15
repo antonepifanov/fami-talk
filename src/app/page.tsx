@@ -1,9 +1,28 @@
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { ChatSidebar } from '@/components/chat/ChatSidebar';
-import { ChatWindow } from '@/components/chat/ChatWindow';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { HomeClient } from '@/components/HomeClient';
+
+// Тип для чата после сериализации (даты становятся строками)
+type SerializedChat = {
+  id: string;
+  name: string | null;
+  isGroup: boolean;
+  participants: {
+    id: string;
+    name: string | null;
+    avatarUrl: string | null;
+    status: string;
+  }[];
+  messages: {
+    id: string;
+    content: string;
+    createdAt: string; // ← строка вместо Date
+  }[];
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 export default async function HomePage() {
   const session = await getServerSession(authOptions);
@@ -12,7 +31,6 @@ export default async function HomePage() {
     redirect('/login');
   }
 
-  // Получаем пользователя по телефону
   const user = await prisma.user.findUnique({
     where: { phone: session.user.phone },
     include: {
@@ -31,7 +49,6 @@ export default async function HomePage() {
     redirect('/login');
   }
 
-  // Получаем список чатов пользователя
   const chats = await prisma.chat.findMany({
     where: {
       participants: {
@@ -57,10 +74,14 @@ export default async function HomePage() {
     },
   });
 
-  return (
-    <div className="flex h-screen">
-      <ChatSidebar chats={chats} userId={user.id} />
-      <ChatWindow userId={user.id} />
-    </div>
-  );
+  // Сериализуем даты в строки для передачи клиенту
+  const serializedChats: SerializedChat[] = chats.map((chat) => ({
+    ...chat,
+    messages: chat.messages.map((msg) => ({
+      ...msg,
+      createdAt: msg.createdAt.toISOString(),
+    })),
+  }));
+
+  return <HomeClient initialChats={serializedChats} userId={user.id} />;
 }

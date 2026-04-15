@@ -3,43 +3,37 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
-import { Send } from 'lucide-react';
+import { Send, ArrowLeft } from 'lucide-react';
 
 interface ChatWindowProps {
+  chatId: string;
   userId: string;
-  chatId?: string;
+  onBack?: () => void;
 }
 
-export function ChatWindow({ userId, chatId }: ChatWindowProps) {
+export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
   const [message, setMessage] = useState('');
-
-  if (!chatId) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50">
-        <div className="text-center text-gray-500">
-          <p className="text-lg">Выберите чат</p>
-          <p className="text-sm">или создайте новый</p>
-        </div>
-      </div>
-    );
-  }
 
   const handleSend = () => {
     if (!message.trim()) return;
-    // TODO: Отправка сообщения через API
-    console.log('Отправка:', message);
+    console.log('Отправка в чат', chatId, ':', message);
     setMessage('');
   };
 
   return (
-    <div className="flex-1 flex flex-col">
-      {/* Заголовок чата */}
-      <div className="p-4 border-b bg-white">
-        <h2 className="font-semibold">Чат</h2>
+    <div className="flex flex-col h-full bg-gray-50">
+      {/* Заголовок с кнопкой "Назад" на мобильных */}
+      <div className="p-4 border-b bg-white flex items-center gap-3">
+        {onBack && (
+          <Button variant="ghost" size="icon" onClick={onBack}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        )}
+        <h2 className="font-semibold">Чат {chatId}</h2>
       </div>
 
       {/* Сообщения */}
-      <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+      <div className="flex-1 overflow-y-auto p-4">
         <div className="text-center text-gray-500">Сообщений пока нет</div>
       </div>
 

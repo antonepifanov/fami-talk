@@ -5,30 +5,17 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, MessageSquare, LogOut, UserCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-
-interface Chat {
-  id: string;
-  name?: string | null;
-  isGroup: boolean;
-  participants: {
-    id: string;
-    name: string | null;
-    avatarUrl: string | null;
-    status: string;
-  }[];
-  messages: {
-    id: string;
-    content: string;
-    createdAt: Date;
-  }[];
-}
+import { Chat } from '@/types/chat';
 
 interface ChatSidebarProps {
   chats: Chat[];
   userId: string;
+  onSelectChat: (chatId: string) => void;
+  selectedChatId?: string | null;
+  isMobile?: boolean;
 }
 
-export function ChatSidebar({ chats, userId }: ChatSidebarProps) {
+export function ChatSidebar({ chats, userId, onSelectChat, selectedChatId }: ChatSidebarProps) {
   const router = useRouter();
 
   const getChatName = (chat: Chat) => {
@@ -50,8 +37,8 @@ export function ChatSidebar({ chats, userId }: ChatSidebarProps) {
   };
 
   return (
-    <div className="w-80 bg-gray-50 border-r flex flex-col">
-      {/* Заголовок */}
+    <div className="h-full bg-gray-50 border-r flex flex-col">
+      {/* Заголовок — на десктопе всегда, на мобильных — показываем */}
       <div className="p-4 border-b flex justify-between items-center">
         <h2 className="font-semibold text-lg">Чаты</h2>
         <div className="flex gap-2">
@@ -67,7 +54,6 @@ export function ChatSidebar({ chats, userId }: ChatSidebarProps) {
         </div>
       </div>
 
-      {/* Список чатов */}
       <div className="flex-1 overflow-y-auto">
         {chats.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
@@ -79,8 +65,12 @@ export function ChatSidebar({ chats, userId }: ChatSidebarProps) {
           chats.map((chat) => (
             <div
               key={chat.id}
-              className="flex items-center gap-3 p-3 hover:bg-gray-100 cursor-pointer transition-colors"
-              onClick={() => router.push(`/chats/${chat.id}`)}
+              className={`flex items-center gap-3 p-3 cursor-pointer transition-colors ${
+                selectedChatId === chat.id
+                  ? 'bg-blue-50 border-r-4 border-blue-600'
+                  : 'hover:bg-gray-100'
+              }`}
+              onClick={() => onSelectChat(chat.id)}
             >
               <Avatar>
                 <AvatarImage src={getChatAvatar(chat) || ''} />
