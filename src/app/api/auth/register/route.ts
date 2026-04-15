@@ -1,3 +1,4 @@
+// src/app/api/auth/register/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
@@ -15,46 +16,30 @@ function normalizePhone(phone: string): string | undefined {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, phone, password } = body;
+    const { name, phone, password } = body;
 
     // Валидация
     if (!name || !password) {
       return NextResponse.json({ error: 'Имя и пароль обязательны' }, { status: 400 });
     }
 
-    if (!email && !phone) {
-      return NextResponse.json({ error: 'Укажите email или номер телефона' }, { status: 400 });
+    if (!phone) {
+      return NextResponse.json({ error: 'Укажите номер телефона' }, { status: 400 });
     }
 
-    const normalizedEmail = email || undefined;
-    const normalizedPhone = phone ? normalizePhone(phone) : undefined;
+    const normalizedPhone = normalizePhone(phone);
+    if (!normalizedPhone) {
+      return NextResponse.json({ error: 'Неверный формат номера телефона' }, { status: 400 });
+    }
 
     // Ищем существующего пользователя
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [{ email: normalizedEmail }, { phone: normalizedPhone }],
-      },
+    const existingUser = await prisma.user.findUnique({
+      where: { phone: normalizedPhone },
     });
 
-    // Если пользователь уже существует
     if (existingUser) {
-      // Если это тот же пользователь (совпадает email или телефон)
-      // и он пытается добавить второй способ входа
-      const emailMatches = normalizedEmail && existingUser.email === normalizedEmail;
-      const phoneMatches = normalizedPhone && existingUser.phone === normalizedPhone;
-
-      if (emailMatches || phoneMatches) {
-        return NextResponse.json(
-          { error: 'Пользователь с таким email или телефоном уже существует' },
-          { status: 400 }
-        );
-      }
-
-      // Если пользователь пытается добавить новый способ входа к существующему аккаунту
-      // (например, регистрируется с email, а потом с телефоном)
-      // TODO: это требует отдельной логики с верификацией
       return NextResponse.json(
-        { error: 'Этот email или телефон уже используется другим аккаунтом' },
+        { error: 'Этот номер телефона уже зарегистрирован' },
         { status: 400 }
       );
     }
@@ -66,9 +51,9 @@ export async function POST(request: Request) {
     const user = await prisma.user.create({
       data: {
         name,
-        email: normalizedEmail,
         phone: normalizedPhone,
         passwordHash: hashedPassword,
+        phoneVerified: new Date(), // телефон подтверждён через SMS
       },
     });
 

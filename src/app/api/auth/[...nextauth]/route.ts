@@ -4,29 +4,7 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
 import { compare } from 'bcryptjs';
 import { JWT } from 'next-auth/jwt';
-
-// Функция нормализации телефона
-function normalizePhone(phone: string): string | undefined {
-  if (!phone) return undefined;
-
-  let cleaned = phone.replace(/\D/g, '');
-
-  if (cleaned.length === 0) return undefined;
-
-  if (cleaned.startsWith('8')) {
-    cleaned = '7' + cleaned.slice(1);
-  }
-
-  if (cleaned.startsWith('7') && cleaned.length === 11) {
-    return '+' + cleaned;
-  }
-
-  if (cleaned.length === 10) {
-    return '+7' + cleaned;
-  }
-
-  return '+' + cleaned;
-}
+import { normalizePhone } from '@/lib/phone';
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Phone, KeyRound, Lock } from 'lucide-react';
+import { normalizePhone } from '@/lib/phone';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -16,20 +17,6 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
-
-  // Нормализация телефона
-  const normalizePhone = (phone: string): string | null => {
-    const cleaned = phone.replace(/\D/g, '');
-    if (!cleaned) return null;
-    if (cleaned.length === 10) return '+7' + cleaned;
-    if (cleaned.length === 11) {
-      if (cleaned.startsWith('7')) return '+' + cleaned;
-      if (cleaned.startsWith('8')) return '+7' + cleaned.slice(1);
-    }
-    if (phone.startsWith('+') && cleaned.length === 11 && cleaned.startsWith('7'))
-      return '+' + cleaned;
-    return null;
-  };
 
   // Маска ввода телефона
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,11 +34,12 @@ export default function ForgotPasswordPage() {
       );
   };
 
+  const normalizedPhone = normalizePhone(phone);
+
   // Шаг 1: отправка кода для сброса пароля
   const sendResetCode = async () => {
     setLoading(true);
     setError('');
-    const normalizedPhone = normalizePhone(phone);
     if (!normalizedPhone) {
       setError('Неверный формат номера');
       setLoading(false);
@@ -91,7 +79,6 @@ export default function ForgotPasswordPage() {
   const verifyResetCode = async () => {
     setLoading(true);
     setError('');
-    const normalizedPhone = normalizePhone(phone);
     if (!normalizedPhone) {
       setError('Неверный формат номера');
       setLoading(false);
@@ -127,7 +114,7 @@ export default function ForgotPasswordPage() {
 
     setLoading(true);
     setError('');
-    const normalizedPhone = normalizePhone(phone);
+
     if (!normalizedPhone) {
       setError('Неверный формат номера');
       setLoading(false);
