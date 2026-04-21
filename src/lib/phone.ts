@@ -21,6 +21,5 @@ export function normalizePhone(phone: string): string | null {
     return '+' + cleaned;
   }
 
-  console.warn(`Не удалось нормализовать номер: ${phone}`);
   return null;
 }

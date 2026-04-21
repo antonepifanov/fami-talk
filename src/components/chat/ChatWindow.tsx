@@ -2,8 +2,10 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, ArrowLeft } from 'lucide-react';
+import { Send, ArrowLeft, Info } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface Message {
@@ -25,6 +27,8 @@ interface ChatWindowProps {
 }
 
 export default function ChatWindow({ chatId, userId, onBack }: ChatWindowProps) {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -50,6 +54,21 @@ export default function ChatWindow({ chatId, userId, onBack }: ChatWindowProps) 
   const sendMessage = async () => {
     if (!newMessage.trim() || sending) return;
 
+    // Оптимистичное добавление сообщения
+    const tempMessage = {
+      id: Date.now().toString(),
+      content: newMessage,
+      senderId: userId,
+      createdAt: new Date().toISOString(),
+      sender: {
+        id: userId,
+        name: session?.user?.name || 'Вы',
+        avatarUrl: session?.user?.avatarUrl || null,
+      },
+    };
+    setMessages((prev) => [...prev, tempMessage]);
+    setNewMessage('');
+
     setSending(true);
     try {
       const res = await fetch('/api/messages', {
@@ -59,10 +78,11 @@ export default function ChatWindow({ chatId, userId, onBack }: ChatWindowProps) 
       });
       if (!res.ok) throw new Error('Ошибка отправки');
 
-      setNewMessage('');
-      await loadMessages();
+      await loadMessages(); // заменяем временные сообщения на реальные
     } catch (error) {
       console.error('Error sending message:', error);
+      // Удаляем временное сообщение при ошибке
+      setMessages((prev) => prev.filter((m) => m.id !== tempMessage.id));
     } finally {
       setSending(false);
     }
@@ -100,6 +120,9 @@ export default function ChatWindow({ chatId, userId, onBack }: ChatWindowProps) 
           </Button>
         )}
         <h2 className="font-semibold">Чат</h2>
+        <Button variant="ghost" size="icon" onClick={() => router.push(`/chats/${chatId}/info`)}>
+          <Info className="h-5 w-5" />
+        </Button>
       </div>
 
       {/* Сообщения */}

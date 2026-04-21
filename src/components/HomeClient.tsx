@@ -40,6 +40,27 @@ export function HomeClient({ initialChats, userId }: HomeClientProps) {
     setIsSidebarOpen(true);
   };
 
+  useEffect(() => {
+    // Устанавливаем статус ONLINE при загрузке
+    fetch('/api/user/status', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'ONLINE' }),
+    });
+
+    // При закрытии вкладки/окна — OFFLINE
+    const handleBeforeUnload = () => {
+      fetch('/api/user/status', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'OFFLINE' }),
+        keepalive: true,
+      });
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
   if (!isMobile) {
     return (
       <div className="flex h-screen">

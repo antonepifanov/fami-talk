@@ -114,6 +114,13 @@ export function ChatSidebar({ chats, userId, onSelectChat, selectedChatId }: Cha
                 <AvatarFallback>{getChatName(chat)[0]?.toUpperCase() || '?'}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    chat.participants.find((p) => p.id !== userId)?.status === 'ONLINE'
+                      ? 'bg-green-500'
+                      : 'bg-gray-400'
+                  }`}
+                />
                 <div className="font-medium truncate">{getChatName(chat)}</div>
                 {chat.messages[0] && (
                   <div className="text-sm text-gray-500 truncate">{chat.messages[0].content}</div>
