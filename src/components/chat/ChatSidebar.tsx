@@ -2,10 +2,26 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, MessageSquare, LogOut, UserCircle } from 'lucide-react';
+import { PlusCircle, MessageSquare, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { signOut } from 'next-auth/react';
-import { Chat } from '@/types/chat';
+import { signOut, useSession } from 'next-auth/react';
+
+interface Chat {
+  id: string;
+  name?: string | null;
+  isGroup: boolean;
+  participants: {
+    id: string;
+    name: string | null;
+    avatarUrl: string | null;
+    status: string;
+  }[];
+  messages: {
+    id: string;
+    content: string;
+    createdAt: Date | string;
+  }[];
+}
 
 interface ChatSidebarProps {
   chats: Chat[];
@@ -17,6 +33,7 @@ interface ChatSidebarProps {
 
 export function ChatSidebar({ chats, userId, onSelectChat, selectedChatId }: ChatSidebarProps) {
   const router = useRouter();
+  const { data: session } = useSession();
 
   const getChatName = (chat: Chat) => {
     if (chat.name) return chat.name;
@@ -38,12 +55,23 @@ export function ChatSidebar({ chats, userId, onSelectChat, selectedChatId }: Cha
 
   return (
     <div className="h-full bg-gray-50 border-r flex flex-col">
-      {/* Заголовок — на десктопе всегда, на мобильных — показываем */}
+      {/* Заголовок с аватаром пользователя */}
       <div className="p-4 border-b flex justify-between items-center">
         <h2 className="font-semibold text-lg">Чаты</h2>
-        <div className="flex gap-2">
-          <Button size="icon" variant="ghost" onClick={() => router.push('/profile')}>
-            <UserCircle className="h-5 w-5" />
+        <div className="flex gap-2 items-center">
+          {/* Кнопка профиля с аватаром */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push('/profile')}
+            className="relative h-9 w-9 rounded-full"
+          >
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={session?.user?.avatarUrl || ''} />
+              <AvatarFallback className="bg-blue-100 text-blue-700 text-sm">
+                {session?.user?.name?.[0]?.toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
           </Button>
           <Button size="icon" variant="ghost">
             <PlusCircle className="h-5 w-5" />
@@ -54,6 +82,7 @@ export function ChatSidebar({ chats, userId, onSelectChat, selectedChatId }: Cha
         </div>
       </div>
 
+      {/* Список чатов */}
       <div className="flex-1 overflow-y-auto">
         {chats.length === 0 ? (
           <div className="p-8 text-center text-gray-500">

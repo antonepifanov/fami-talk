@@ -4,45 +4,46 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
 import { compare } from 'bcryptjs';
 import { JWT } from 'next-auth/jwt';
-import { normalizePhone } from '@/lib/phone';
+
+function normalizePhone(phone: string): string | undefined {
+  if (!phone) return undefined;
+  let cleaned = phone.replace(/\D/g, '');
+  if (cleaned.length === 0) return undefined;
+  if (cleaned.startsWith('8')) cleaned = '7' + cleaned.slice(1);
+  if (cleaned.startsWith('7') && cleaned.length === 11) return '+' + cleaned;
+  if (cleaned.length === 10) return '+7' + cleaned;
+  return '+' + cleaned;
+}
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
-      name: 'credentials',
+      name: 'phone',
       credentials: {
         login: { label: 'Телефон', type: 'text' },
         password: { label: 'Пароль', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.login || !credentials?.password) {
-          return null;
-        }
+        if (!credentials?.login || !credentials?.password) return null;
 
         const normalizedPhone = normalizePhone(credentials.login);
-        if (!normalizedPhone) {
-          return null;
-        }
+        if (!normalizedPhone) return null;
 
         const user = await prisma.user.findUnique({
           where: { phone: normalizedPhone },
         });
 
-        if (!user || !user.passwordHash) {
-          return null;
-        }
+        if (!user || !user.passwordHash) return null;
 
         const isValid = await compare(credentials.password, user.passwordHash);
-
-        if (!isValid) {
-          return null;
-        }
+        if (!isValid) return null;
 
         return {
           id: user.id,
           phone: user.phone,
           name: user.name,
+          avatarUrl: user.avatarUrl,
         };
       },
     }),
@@ -59,14 +60,29 @@ export const authOptions = {
         token.id = user.id;
         token.phone = user.phone;
         token.name = user.name;
+        token.avatarUrl = user.avatarUrl;
       }
       return token;
     },
     async session({ session, token }: { session: Session; token: JWT }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.phone = token.phone as string;
-        session.user.name = token.name as string;
+      // ✅ Всегда получаем свежие данные из базы
+      if (token.id) {
+        const freshUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            avatarUrl: true,
+          },
+        });
+
+        if (freshUser) {
+          session.user.id = freshUser.id;
+          session.user.name = freshUser.name;
+          session.user.phone = freshUser.phone;
+          session.user.avatarUrl = freshUser.avatarUrl;
+        }
       }
       return session;
     },

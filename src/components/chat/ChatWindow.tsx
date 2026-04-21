@@ -16,7 +16,6 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
 
   const handleSend = () => {
     if (!message.trim()) return;
-    console.log('Отправка в чат', chatId, ':', message);
     setMessage('');
   };
 

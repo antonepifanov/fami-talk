@@ -7,7 +7,6 @@ export async function sendVerificationSMS(phone: string, code: string): Promise<
 
   // Режим разработки: если нет API-ключа
   if (!apiKey) {
-    console.log(`\n📱 [DEV MODE] Код для ${phone}: ${code}\n`);
     return true;
   }
 
