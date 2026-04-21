@@ -40,7 +40,6 @@ export function HomeClient({ initialChats, userId }: HomeClientProps) {
     setIsSidebarOpen(true);
   };
 
-  // Десктоп: два блока рядом
   if (!isMobile) {
     return (
       <div className="flex h-screen">
@@ -68,12 +67,10 @@ export function HomeClient({ initialChats, userId }: HomeClientProps) {
     );
   }
 
-  // Мобильные: показываем один экран за раз
   if (!isSidebarOpen && selectedChatId) {
     return <ChatWindow chatId={selectedChatId} userId={userId} onBack={handleBackToList} />;
   }
 
-  // Мобильные: список чатов (заголовок только здесь, без дублирования)
   return (
     <div className="h-screen flex flex-col">
       <ChatSidebar

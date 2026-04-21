@@ -9,7 +9,6 @@ const SECRET_ACCESS_KEY = process.env.SELECTEL_SECRET_ACCESS_KEY;
 const BUCKET_NAME = process.env.SELECTEL_BUCKET_NAME;
 const BUCKET_ID = process.env.SELECTEL_BUCKET_ID;
 
-// Используем правильные настройки
 const s3Client = new S3Client({
   region: 'ru-3',
   endpoint: 'https://s3.ru-3.storage.selcloud.ru',
@@ -17,7 +16,7 @@ const s3Client = new S3Client({
     accessKeyId: ACCESS_KEY_ID!,
     secretAccessKey: SECRET_ACCESS_KEY!,
   },
-  forcePathStyle: true, // важно для Selectel
+  forcePathStyle: true,
 });
 
 export async function POST(request: Request) {

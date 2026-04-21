@@ -68,9 +68,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, message: 'Телефон успешно изменён' });
   } catch (error) {
     console.error('❌ [change-phone-confirm] Ошибка:', error);
-    return NextResponse.json(
-      { error: 'Ошибка смены телефона' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Ошибка смены телефона' }, { status: 500 });
   }
 }

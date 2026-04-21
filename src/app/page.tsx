@@ -18,7 +18,7 @@ type SerializedChat = {
   messages: {
     id: string;
     content: string;
-    createdAt: string; // ← строка вместо Date
+    createdAt: string;
   }[];
   createdAt: Date;
   updatedAt: Date;

@@ -98,10 +98,8 @@ export default function ProfilePage() {
 
       if (!res.ok) throw new Error(data.error);
 
-      // ✅ Принудительно обновляем сессию, чтобы подтянуть новый avatarUrl
       await update();
 
-      // ✅ Также обновляем локальное состояние, если avatarUrl вернулся в ответе
       if (data.avatarUrl) {
         setAvatarUrl(data.avatarUrl);
       }

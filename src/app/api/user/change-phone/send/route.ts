@@ -58,9 +58,7 @@ export async function POST(request: Request) {
     const smsSent = await sendVerificationSMS(normalizedNewPhone, code);
 
     if (!smsSent) {
-      console.warn('⚠️ [change-phone] SMS не отправлено, но код сохранён');
-      // Для разработки можно не возвращать ошибку
-      // return NextResponse.json({ error: 'Ошибка отправки SMS' }, { status: 500 });
+      return NextResponse.json({ error: 'Ошибка отправки SMS' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, message: 'Код отправлен' });

@@ -5,7 +5,6 @@ let client: HttpSms | null = null;
 export async function sendVerificationSMS(phone: string, code: string): Promise<boolean> {
   const apiKey = process.env.HTTPSMS_API_KEY;
 
-  // Режим разработки: если нет API-ключа
   if (!apiKey) {
     return true;
   }

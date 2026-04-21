@@ -65,7 +65,7 @@ export const authOptions = {
       return token;
     },
     async session({ session, token }: { session: Session; token: JWT }) {
-      // ✅ Всегда получаем свежие данные из базы
+      // Всегда получаем свежие данные из базы
       if (token.id) {
         const freshUser = await prisma.user.findUnique({
           where: { id: token.id as string },

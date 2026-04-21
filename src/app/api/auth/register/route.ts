@@ -1,4 +1,3 @@
-// src/app/api/auth/register/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
@@ -53,7 +52,7 @@ export async function POST(request: Request) {
         name,
         phone: normalizedPhone,
         passwordHash: hashedPassword,
-        phoneVerified: new Date(), // телефон подтверждён через SMS
+        phoneVerified: new Date(),
       },
     });
 
