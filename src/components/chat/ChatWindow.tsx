@@ -125,12 +125,13 @@ export default function ChatWindow({ chatId, userId, onBack }: ChatWindowProps) 
                       isOwn ? 'bg-blue-600 text-white' : 'bg-white border text-gray-800'
                     }`}
                   >
-                    {!isOwn && (
-                      <div className="text-xs text-gray-500 mb-1">{msg.sender.name}</div>
-                    )}
+                    {!isOwn && <div className="text-xs text-gray-500 mb-1">{msg.sender.name}</div>}
                     <p className="text-sm break-words">{msg.content}</p>
                     <p className={`text-xs mt-1 ${isOwn ? 'text-blue-200' : 'text-gray-400'}`}>
-                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(msg.createdAt).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
                     </p>
                   </div>
                 </div>

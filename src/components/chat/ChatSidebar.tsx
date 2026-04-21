@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MessageSquare, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
+import { CreateChatModal } from './CreateChatModal';
 
 interface Chat {
   id: string;
@@ -34,6 +36,7 @@ interface ChatSidebarProps {
 export function ChatSidebar({ chats, userId, onSelectChat, selectedChatId }: ChatSidebarProps) {
   const router = useRouter();
   const { data: session } = useSession();
+  const [modalOpen, setModalOpen] = useState(false);
 
   const getChatName = (chat: Chat) => {
     if (chat.name) return chat.name;
@@ -53,13 +56,18 @@ export function ChatSidebar({ chats, userId, onSelectChat, selectedChatId }: Cha
     router.push('/login');
   };
 
+  const handleChatCreated = (chatId: string) => {
+    onSelectChat(chatId);
+    // Можно также обновить список чатов, но пока просто перезагрузим страницу
+    window.location.reload();
+  };
+
   return (
     <div className="h-full bg-gray-50 border-r flex flex-col">
       {/* Заголовок с аватаром пользователя */}
       <div className="p-4 border-b flex justify-between items-center">
         <h2 className="font-semibold text-lg">Чаты</h2>
         <div className="flex gap-2 items-center">
-          {/* Кнопка профиля с аватаром */}
           <Button
             variant="ghost"
             size="icon"
@@ -73,7 +81,7 @@ export function ChatSidebar({ chats, userId, onSelectChat, selectedChatId }: Cha
               </AvatarFallback>
             </Avatar>
           </Button>
-          <Button size="icon" variant="ghost">
+          <Button size="icon" variant="ghost" onClick={() => setModalOpen(true)}>
             <PlusCircle className="h-5 w-5" />
           </Button>
           <Button size="icon" variant="ghost" onClick={handleLogout}>
@@ -115,6 +123,13 @@ export function ChatSidebar({ chats, userId, onSelectChat, selectedChatId }: Cha
           ))
         )}
       </div>
+
+      {/* Модальное окно создания чата */}
+      <CreateChatModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onChatCreated={handleChatCreated}
+      />
     </div>
   );
 }
