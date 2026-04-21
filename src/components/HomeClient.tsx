@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
-import { ChatWindow } from '@/components/chat/ChatWindow';
+import ChatWindow from '@/components/chat/ChatWindow';
 import { Chat } from '@/types/chat';
 
 interface HomeClientProps {
