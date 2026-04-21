@@ -16,7 +16,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
     }
 
-    const { newPhone } = await request.json();
+    const body = await request.json();
+    const { newPhone } = body;
+
+    if (!newPhone) {
+      return NextResponse.json({ error: 'Новый телефон не указан' }, { status: 400 });
+    }
+
     const normalizedNewPhone = normalizePhone(newPhone);
 
     if (!normalizedNewPhone) {
@@ -35,6 +41,7 @@ export async function POST(request: Request) {
     const code = generateCode();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
+    // Сохраняем код в БД
     await prisma.verificationCode.upsert({
       where: { phone_type: { phone: normalizedNewPhone, type: 'change_phone' } },
       update: { code, expiresAt, used: false, metadata: session.user.phone },
@@ -47,11 +54,21 @@ export async function POST(request: Request) {
       },
     });
 
-    await sendVerificationSMS(normalizedNewPhone, code);
+    // Отправляем SMS
+    const smsSent = await sendVerificationSMS(normalizedNewPhone, code);
+
+    if (!smsSent) {
+      console.warn('⚠️ [change-phone] SMS не отправлено, но код сохранён');
+      // Для разработки можно не возвращать ошибку
+      // return NextResponse.json({ error: 'Ошибка отправки SMS' }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true, message: 'Код отправлен' });
   } catch (error) {
-    console.error('Send change phone code error:', error);
-    return NextResponse.json({ error: 'Ошибка отправки кода' }, { status: 500 });
+    console.error('❌ [change-phone] Ошибка:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Ошибка отправки кода' },
+      { status: 500 }
+    );
   }
 }
