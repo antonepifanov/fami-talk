@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import ChatWindow from '@/components/chat/ChatWindow';
 import { Chat } from '@/types/chat';
+import { useNotifications } from '@/hooks/useNotifications';
 
 interface HomeClientProps {
   initialChats: Chat[];
@@ -16,18 +17,56 @@ export function HomeClient({ initialChats, userId }: HomeClientProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
+  const lastMessageCounts = useRef<Record<string, number>>({});
+  const { showNotification } = useNotifications();
 
-  // Функция для загрузки чатов
-  const fetchChats = useCallback(async () => {
+  // Инициализируем счётчики сообщений при монтировании и при изменении chats
+  useEffect(() => {
+    const counts: Record<string, number> = {};
+    chats.forEach((chat) => {
+      counts[chat.id] = chat.messages.length;
+    });
+    lastMessageCounts.current = counts;
+  }, [chats]); // ← теперь chats не вызывает бесконечный цикл
+
+  const refreshChats = useCallback(async () => {
     try {
       const response = await fetch('/api/chats');
       if (!response.ok) throw new Error('Ошибка загрузки');
-      const freshChats = await response.json();
+      const freshChats: Chat[] = await response.json();
+
+      // Проверяем новые сообщения
+      freshChats.forEach((chat) => {
+        const oldCount = lastMessageCounts.current[chat.id] || 0;
+        const newCount = chat.messages.length;
+
+        if (newCount > oldCount && selectedChatId !== chat.id) {
+          const lastMessage = chat.messages[chat.messages.length - 1];
+          const isOwn = lastMessage?.senderId === userId;
+
+          if (lastMessage && !isOwn) {
+            const chatName =
+              chat.name || chat.participants.find((p) => p.id !== userId)?.name || 'Чат';
+
+            showNotification(
+              `Новое сообщение от ${chatName}`,
+              lastMessage.content.length > 50
+                ? lastMessage.content.slice(0, 50) + '...'
+                : lastMessage.content,
+              () => {
+                setSelectedChatId(chat.id);
+                if (isMobile) setIsSidebarOpen(false);
+              }
+            );
+          }
+        }
+      });
+
       setChats(freshChats);
     } catch (error) {
-      console.error('Polling error:', error);
+      console.error('Refresh chats error:', error);
     }
-  }, []);
+  }, [selectedChatId, userId, isMobile, showNotification]);
 
   // Настройка адаптивности
   useEffect(() => {
@@ -37,18 +76,15 @@ export function HomeClient({ initialChats, userId }: HomeClientProps) {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Основной polling-интервал (например, каждые 5 секунд)
+  // Polling
   useEffect(() => {
-    // Запускаем polling
-    intervalIdRef.current = setInterval(fetchChats, 5000);
-
-    // Очистка при размонтировании компонента
+    refreshChats();
+    intervalIdRef.current = setInterval(refreshChats, 5000);
     return () => {
       if (intervalIdRef.current) clearInterval(intervalIdRef.current);
     };
-  }, [fetchChats]);
+  }, [refreshChats]);
 
-  // Хендлеры для выбора чата и мобильного меню
   const handleSelectChat = (chatId: string) => {
     setSelectedChatId(chatId);
     if (isMobile) setIsSidebarOpen(false);
@@ -59,18 +95,7 @@ export function HomeClient({ initialChats, userId }: HomeClientProps) {
     setIsSidebarOpen(true);
   };
 
-  const refreshChats = useCallback(async () => {
-    try {
-      const response = await fetch('/api/chats');
-      if (!response.ok) throw new Error('Ошибка загрузки');
-      const freshChats = await response.json();
-      setChats(freshChats);
-    } catch (error) {
-      console.error('Refresh chats error:', error);
-    }
-  }, []);
-
-  // Рендер для десктопа
+  // Десктоп
   if (!isMobile) {
     return (
       <div className="flex h-screen">
@@ -84,12 +109,7 @@ export function HomeClient({ initialChats, userId }: HomeClientProps) {
         </div>
         <div className="flex-1">
           {selectedChatId ? (
-            <ChatWindow
-              chatId={selectedChatId}
-              userId={userId}
-              onChatOpened={refreshChats}
-              onMessagesRead={refreshChats}
-            />
+            <ChatWindow chatId={selectedChatId} userId={userId} onMessagesRead={refreshChats} />
           ) : (
             <div className="h-full flex items-center justify-center bg-gray-50">
               <div className="text-center text-gray-500">
@@ -103,9 +123,16 @@ export function HomeClient({ initialChats, userId }: HomeClientProps) {
     );
   }
 
-  // Рендер для мобильных устройств
+  // Мобильные
   if (!isSidebarOpen && selectedChatId) {
-    return <ChatWindow chatId={selectedChatId} userId={userId} onBack={handleBackToList} />;
+    return (
+      <ChatWindow
+        chatId={selectedChatId}
+        userId={userId}
+        onBack={handleBackToList}
+        onMessagesRead={refreshChats}
+      />
+    );
   }
 
   return (
