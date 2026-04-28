@@ -7,12 +7,13 @@ export interface Chat {
     name: string | null;
     avatarUrl: string | null;
     status: string;
+    lastSeen?: string | null;
   }[];
   messages: {
     id: string;
     content: string;
+    senderId: string;
     createdAt: Date | string;
+    readBy?: string[];
   }[];
-  createdAt?: Date;
-  updatedAt?: Date;
 }

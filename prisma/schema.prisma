@@ -42,6 +42,7 @@ model Message {
   status    String   @default("SENT")
   createdAt DateTime @default(now())
   readAt    DateTime?
+  readBy    String[]
 
   senderId  String
   chatId    String

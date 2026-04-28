@@ -59,6 +59,17 @@ export function HomeClient({ initialChats, userId }: HomeClientProps) {
     setIsSidebarOpen(true);
   };
 
+  const refreshChats = useCallback(async () => {
+    try {
+      const response = await fetch('/api/chats');
+      if (!response.ok) throw new Error('Ошибка загрузки');
+      const freshChats = await response.json();
+      setChats(freshChats);
+    } catch (error) {
+      console.error('Refresh chats error:', error);
+    }
+  }, []);
+
   // Рендер для десктопа
   if (!isMobile) {
     return (
@@ -73,7 +84,12 @@ export function HomeClient({ initialChats, userId }: HomeClientProps) {
         </div>
         <div className="flex-1">
           {selectedChatId ? (
-            <ChatWindow chatId={selectedChatId} userId={userId} />
+            <ChatWindow
+              chatId={selectedChatId}
+              userId={userId}
+              onChatOpened={refreshChats}
+              onMessagesRead={refreshChats}
+            />
           ) : (
             <div className="h-full flex items-center justify-center bg-gray-50">
               <div className="text-center text-gray-500">
