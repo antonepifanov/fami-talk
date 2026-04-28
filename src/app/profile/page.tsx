@@ -239,7 +239,7 @@ export default function ProfilePage() {
             <div className="flex flex-col items-center gap-4">
               <div className="relative">
                 <Avatar className="w-24 h-24">
-                  <AvatarImage src={avatarUrl || session?.user?.avatarUrl || ''} />
+                  <AvatarImage src={avatarUrl || session?.user?.avatarUrl || undefined} />
                   <AvatarFallback className="text-2xl bg-blue-100 text-blue-700">
                     {session.user?.name?.[0]?.toUpperCase() || '?'}
                   </AvatarFallback>

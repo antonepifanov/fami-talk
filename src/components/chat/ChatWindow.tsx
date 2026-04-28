@@ -137,7 +137,7 @@ export default function ChatWindow({ chatId, userId, onBack }: ChatWindowProps) 
                 <div className={`flex gap-2 max-w-[70%] ${isOwn ? 'flex-row-reverse' : ''}`}>
                   {!isOwn && (
                     <Avatar className="h-8 w-8 flex-shrink-0">
-                      <AvatarImage src={msg.sender.avatarUrl || ''} />
+                      <AvatarImage src={msg.sender.avatarUrl || undefined} />
                       <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
                         {msg.sender.name?.[0]?.toUpperCase() || '?'}
                       </AvatarFallback>

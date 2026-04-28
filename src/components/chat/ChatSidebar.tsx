@@ -7,23 +7,7 @@ import { PlusCircle, MessageSquare, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { CreateChatModal } from './CreateChatModal';
-
-interface Chat {
-  id: string;
-  name?: string | null;
-  isGroup: boolean;
-  participants: {
-    id: string;
-    name: string | null;
-    avatarUrl: string | null;
-    status: string;
-  }[];
-  messages: {
-    id: string;
-    content: string;
-    createdAt: Date | string;
-  }[];
-}
+import { Chat } from '@/types/chat';
 
 interface ChatSidebarProps {
   chats: Chat[];
@@ -58,7 +42,6 @@ export function ChatSidebar({ chats, userId, onSelectChat, selectedChatId }: Cha
 
   const handleChatCreated = (chatId: string) => {
     onSelectChat(chatId);
-    // Можно также обновить список чатов, но пока просто перезагрузим страницу
     window.location.reload();
   };
 
@@ -75,7 +58,7 @@ export function ChatSidebar({ chats, userId, onSelectChat, selectedChatId }: Cha
             className="relative h-9 w-9 rounded-full"
           >
             <Avatar className="h-8 w-8">
-              <AvatarImage src={session?.user?.avatarUrl || ''} />
+              <AvatarImage src={session?.user?.avatarUrl ?? undefined} />
               <AvatarFallback className="bg-blue-100 text-blue-700 text-sm">
                 {session?.user?.name?.[0]?.toUpperCase() || 'U'}
               </AvatarFallback>
