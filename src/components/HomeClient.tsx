@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import ChatWindow from '@/components/chat/ChatWindow';
 import { Chat } from '@/types/chat';
@@ -11,28 +11,47 @@ interface HomeClientProps {
 }
 
 export function HomeClient({ initialChats, userId }: HomeClientProps) {
+  const [chats, setChats] = useState<Chat[]>(initialChats);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Функция для загрузки чатов
+  const fetchChats = useCallback(async () => {
+    try {
+      const response = await fetch('/api/chats');
+      if (!response.ok) throw new Error('Ошибка загрузки');
+      const freshChats = await response.json();
+      setChats(freshChats);
+    } catch (error) {
+      console.error('Polling error:', error);
+    }
+  }, []);
+
+  // Настройка адаптивности
   useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (!mobile) {
-        setIsSidebarOpen(true);
-      }
-    };
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Основной polling-интервал (например, каждые 5 секунд)
+  useEffect(() => {
+    // Запускаем polling
+    intervalIdRef.current = setInterval(fetchChats, 5000);
+
+    // Очистка при размонтировании компонента
+    return () => {
+      if (intervalIdRef.current) clearInterval(intervalIdRef.current);
+    };
+  }, [fetchChats]);
+
+  // Хендлеры для выбора чата и мобильного меню
   const handleSelectChat = (chatId: string) => {
     setSelectedChatId(chatId);
-    if (isMobile) {
-      setIsSidebarOpen(false);
-    }
+    if (isMobile) setIsSidebarOpen(false);
   };
 
   const handleBackToList = () => {
@@ -40,33 +59,13 @@ export function HomeClient({ initialChats, userId }: HomeClientProps) {
     setIsSidebarOpen(true);
   };
 
-  useEffect(() => {
-    // Устанавливаем статус ONLINE при загрузке
-    fetch('/api/user/status', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'ONLINE' }),
-    });
-
-    // При закрытии вкладки/окна — OFFLINE
-    const handleBeforeUnload = () => {
-      fetch('/api/user/status', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'OFFLINE' }),
-        keepalive: true,
-      });
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
-
+  // Рендер для десктопа
   if (!isMobile) {
     return (
       <div className="flex h-screen">
         <div className="w-80 flex-shrink-0">
           <ChatSidebar
-            chats={initialChats}
+            chats={chats}
             userId={userId}
             onSelectChat={handleSelectChat}
             selectedChatId={selectedChatId}
@@ -88,6 +87,7 @@ export function HomeClient({ initialChats, userId }: HomeClientProps) {
     );
   }
 
+  // Рендер для мобильных устройств
   if (!isSidebarOpen && selectedChatId) {
     return <ChatWindow chatId={selectedChatId} userId={userId} onBack={handleBackToList} />;
   }
@@ -95,7 +95,7 @@ export function HomeClient({ initialChats, userId }: HomeClientProps) {
   return (
     <div className="h-screen flex flex-col">
       <ChatSidebar
-        chats={initialChats}
+        chats={chats}
         userId={userId}
         onSelectChat={handleSelectChat}
         selectedChatId={selectedChatId}
